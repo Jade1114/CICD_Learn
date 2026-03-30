@@ -1,51 +1,27 @@
-name: CI/CD Pipeline
+name: CI/CD with Docker
 
 on:
   push:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
+  packages: write # 👈 用于推镜像
 
 jobs:
-  test:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: 安装 Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
+      - name: 登录 GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: 安装依赖
-        run: npm install
+      - name: 构建镜像
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}/app:latest .
 
-      - name: 运行测试
-        run: npm test # 👈 核心！
-
-  build-and-deploy:
-    needs: test # 👈 关键：依赖 test 成功！
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: 安装 Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
-
-      - name: 安装依赖
-        run: npm install
-
-      - name: 构建项目
-        run: npm run build
-
-      - name: 部署
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: dist
-          force_orphan: true
+      - name: 推送镜像
+        run: |
+          docker push ghcr.io/${{ github.repository }}/app:latest
