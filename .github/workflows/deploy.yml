@@ -1,18 +1,23 @@
-name: Deploy to GitHub Pages
+name: Deploy with Build
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: 部署到 GitHub Pages
+      - name: 模拟构建
+        run: |
+          mkdir -p dist
+          cp index.html dist/index.html
+
+      - name: 部署
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: dist
