@@ -1,14 +1,32 @@
-name: Deploy React App
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [main]
 
 permissions:
-  contents: write # 👈 关键就在这！
+  contents: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 安装 Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 运行测试
+        run: npm test # 👈 核心！
+
   build-and-deploy:
+    needs: test # 👈 关键：依赖 test 成功！
     runs-on: ubuntu-latest
 
     steps:
@@ -30,3 +48,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: dist
+          force_orphan: true
